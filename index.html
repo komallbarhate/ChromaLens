@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChromaLens – Pixel-Level Color Analyzer</title>
+  <meta name="description" content="Upload any image and instantly get a pixel-level breakdown of its 11 primary color categories with beautiful interactive charts." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ── BACKGROUND BLOBS ── -->
+  <div class="bg-blob blob-1"></div>
+  <div class="bg-blob blob-2"></div>
+  <div class="bg-blob blob-3"></div>
+
+  <!-- ── HEADER ── -->
+  <header class="site-header">
+    <div class="logo">
+      <span class="logo-icon">🎨</span>
+      <span class="logo-text">ChromaLens</span>
+    </div>
+    <p class="tagline">Pixel-level color intelligence</p>
+  </header>
+
+  <!-- ── HERO / UPLOAD ── -->
+  <main class="container">
+
+    <section class="hero">
+      <h1 class="hero-title">Decode Every <span class="gradient-text">Color</span> in Your Image</h1>
+      <p class="hero-sub">Upload a photo and get an instant, pixel-accurate breakdown across 11 universal color categories.</p>
+    </section>
+
+    <!-- Drop zone -->
+    <div class="upload-card" id="uploadCard">
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-icon">📷</div>
+        <p class="drop-title">Drag &amp; Drop your image here</p>
+        <p class="drop-sub">or click to browse — PNG, JPG, WEBP supported</p>
+        <label for="fileInput" class="btn-upload" id="browseBtn">Choose Image</label>
+        <input type="file" id="fileInput" accept="image/*" hidden />
+      </div>
+    </div>
+
+    <!-- Hidden canvas for pixel processing -->
+    <canvas id="hiddenCanvas" hidden></canvas>
+
+    <!-- ── RESULTS SECTION ── -->
+    <section class="results-section" id="resultsSection" hidden>
+
+      <!-- Image Preview + stats strip -->
+      <div class="preview-row">
+        <div class="preview-frame" id="previewFrame">
+          <img id="previewImg" alt="Uploaded image preview" />
+          <div class="preview-label" id="previewLabel"></div>
+          <div class="tap-hint" id="tapHint">👆 Tap image to identify color</div>
+        </div>
+        <div class="stats-panel">
+          <h2 class="stats-title">Analysis Summary</h2>
+          <div class="stats-grid" id="statsGrid"></div>
+        </div>
+      </div>
+
+      <!-- Charts row -->
+      <div class="charts-row">
+
+        <!-- Doughnut -->
+        <div class="chart-card" id="doughnutCard">
+          <h3 class="chart-title">Color Distribution</h3>
+          <div class="chart-wrap doughnut-wrap">
+            <canvas id="doughnutChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Bar -->
+        <div class="chart-card" id="barCard">
+          <h3 class="chart-title">Percentage Breakdown</h3>
+          <div class="chart-wrap bar-wrap">
+            <canvas id="barChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Color Legend swatches -->
+      <div class="legend-card">
+        <h3 class="chart-title">Color Legend</h3>
+        <div class="swatch-grid" id="swatchGrid"></div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="action-row">
+        <button class="btn-action" id="downloadDoughnutBtn">⬇ Download Pie Chart</button>
+        <button class="btn-action" id="downloadBarBtn">⬇ Download Bar Chart</button>
+        <button class="btn-action btn-secondary" id="resetBtn">🔄 Analyze Another</button>
+      </div>
+
+    </section>
+
+    <!-- Processing overlay -->
+    <div class="processing-overlay" id="processingOverlay" hidden>
+      <div class="spinner-ring"></div>
+      <p class="processing-text">Analyzing pixels…</p>
+    </div>
+
+  </main>
+
+  <!-- ── ALGORITHM INFO ── -->
+  <section class="algo-section container">
+    <h2 class="algo-title">How the Color Mapping Works</h2>
+    <div class="algo-grid">
+      <div class="algo-card">
+        <div class="algo-num">01</div>
+        <h4>RGB → HSL Conversion</h4>
+        <p>Every pixel's RGB values are converted to Hue, Saturation, and Lightness — a perceptually uniform colour space that mirrors human vision.</p>
+      </div>
+      <div class="algo-card">
+        <div class="algo-num">02</div>
+        <h4>Lightness Gating</h4>
+        <p>Pixels with very high lightness (&gt;88 %) are classified as <strong>White</strong>; very low lightness (&lt;12 %) as <strong>Black</strong>; mid-lightness + low saturation as <strong>Gray</strong>.</p>
+      </div>
+      <div class="algo-card">
+        <div class="algo-num">03</div>
+        <h4>Hue-Based Classification</h4>
+        <p>Remaining pixels are sorted by hue angle into Red, Orange, Yellow, Green, Blue, Purple, Pink, and Brown — matching the 11 universal categories.</p>
+      </div>
+      <div class="algo-card">
+        <div class="algo-num">04</div>
+        <h4>Brown / Pink Refinement</h4>
+        <p>Brown (low-saturation, warm hues) and Pink (high-lightness reds) are separated from Red and Orange using combined saturation-lightness thresholds.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <p>ChromaLens · Pixel-level color analysis tool</p>
+  </footer>
+
+  <!-- ── COLOR PICKER TOOLTIP ── -->
+  <div class="color-tooltip" id="colorTooltip">
+    <div class="tooltip-swatch" id="tooltipSwatch"></div>
+    <div class="tooltip-body">
+      <span class="tooltip-category" id="tooltipCategory"></span>
+      <span class="tooltip-hex" id="tooltipHex"></span>
+    </div>
+  </div>
+  <!-- Pulse ring at click point -->
+  <div class="picker-dot" id="pickerDot"></div>
+
+  <script src="analyzer.js"></script>
+</body>
+</html>
